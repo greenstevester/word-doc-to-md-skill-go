@@ -8,7 +8,7 @@ CLI tool that converts Word documents (.docx) to clean, agent-readable Markdown.
 
 This repo builds the **platform-specific binaries** (Windows, macOS, Linux × amd64/arm64) consumed by the skill package at [greenstevester/word-doc-to-md-skill](https://github.com/greenstevester/word-doc-to-md-skill). When someone installs that skill, it detects OS/arch and selects the correct binary from this repo's releases.
 
-Module name: `docx-to-agent-md` | Go 1.22 | Single `main` package
+Module name: `docx-to-agent-md` | Go 1.24+ (CI runs 1.26.1) | Single `main` package
 
 ## Build & Test Commands
 
