@@ -36,27 +36,20 @@ This binary powers the [word-doc-to-md-skill](https://github.com/greenstevester/
 
 ### Direct download
 
-Grab the latest release for your platform:
+Grab the latest release for your platform from the [releases page](https://github.com/greenstevester/word-doc-to-md-skill-go/releases/latest), or use the install script:
 
 ```bash
-# macOS (Apple Silicon)
-curl -L https://github.com/greenstevester/word-doc-to-md-skill-go/releases/latest/download/docx-to-md_darwin_arm64.tar.gz | tar xz
-chmod +x docx-to-md
-
-# macOS (Intel)
-curl -L https://github.com/greenstevester/word-doc-to-md-skill-go/releases/latest/download/docx-to-md_darwin_amd64.tar.gz | tar xz
-
-# Linux (AMD64)
-curl -L https://github.com/greenstevester/word-doc-to-md-skill-go/releases/latest/download/docx-to-md_linux_amd64.tar.gz | tar xz
-
-# Linux (ARM64)
-curl -L https://github.com/greenstevester/word-doc-to-md-skill-go/releases/latest/download/docx-to-md_linux_arm64.tar.gz | tar xz
+curl -fsSL https://raw.githubusercontent.com/greenstevester/word-doc-to-md-skill/main/install.sh | bash
 ```
+
+This detects your OS/architecture and downloads the correct binary.
 
 ### From source
 
 ```bash
-go install github.com/greenstevester/word-doc-to-md-skill-go@latest
+git clone https://github.com/greenstevester/word-doc-to-md-skill-go.git
+cd word-doc-to-md-skill-go
+go build -o docx-to-md .
 ```
 
 ## Usage
