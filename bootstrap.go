@@ -41,13 +41,15 @@ func bootstrap(version string) error {
 	if err != nil {
 		return fmt.Errorf("create temp file: %w", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	if err := downloadFile(url, tmpFile); err != nil {
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		return fmt.Errorf("download %s: %w", asset, err)
 	}
-	tmpFile.Close()
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("close temp file: %w", err)
+	}
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("create bin dir: %w", err)
@@ -138,11 +140,11 @@ func isExecutable(path string) bool {
 }
 
 func downloadFile(url string, dest *os.File) error {
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) //nolint:gosec // URL is constructed from constants, not user input
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("HTTP %d from %s", resp.StatusCode, url)
@@ -157,13 +159,13 @@ func extractFromTarGz(archivePath, innerFile, destPath string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	gz, err := gzip.NewReader(f)
 	if err != nil {
 		return err
 	}
-	defer gz.Close()
+	defer func() { _ = gz.Close() }()
 
 	tr := tar.NewReader(gz)
 	for {
@@ -179,9 +181,11 @@ func extractFromTarGz(archivePath, innerFile, destPath string) error {
 			if err != nil {
 				return err
 			}
-			defer out.Close()
-			_, err = io.Copy(out, tr)
-			return err
+			if _, err = io.Copy(out, tr); err != nil {
+				_ = out.Close()
+				return err
+			}
+			return out.Close()
 		}
 	}
 	return fmt.Errorf("%s not found in archive", innerFile)
@@ -192,7 +196,7 @@ func extractFromZip(archivePath, innerFile, destPath string) error {
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 
 	for _, f := range r.File {
 		if f.Name == innerFile {
@@ -200,14 +204,18 @@ func extractFromZip(archivePath, innerFile, destPath string) error {
 			if err != nil {
 				return err
 			}
-			defer rc.Close()
 			out, err := os.Create(destPath)
 			if err != nil {
+				_ = rc.Close()
 				return err
 			}
-			defer out.Close()
-			_, err = io.Copy(out, rc)
-			return err
+			if _, err = io.Copy(out, rc); err != nil {
+				_ = rc.Close()
+				_ = out.Close()
+				return err
+			}
+			_ = rc.Close()
+			return out.Close()
 		}
 	}
 	return fmt.Errorf("%s not found in archive", innerFile)
