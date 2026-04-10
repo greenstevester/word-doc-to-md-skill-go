@@ -22,8 +22,10 @@ func convert(input, output string, stdout bool) error {
 		return fmt.Errorf("create temp: %w", err)
 	}
 	tmpPath := tmpFile.Name()
-	tmpFile.Close()
-	defer os.Remove(tmpPath)
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("close temp: %w", err)
+	}
+	defer func() { _ = os.Remove(tmpPath) }()
 
 	fmt.Fprintf(os.Stderr, "Running pandoc on %s ...\n", filepath.Base(input))
 
