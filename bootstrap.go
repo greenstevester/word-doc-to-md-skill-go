@@ -136,10 +136,17 @@ func pandocBinaryName(platform string) string {
 }
 
 func innerPath(platform, version string) string {
-	if strings.HasPrefix(platform, "windows") {
+	switch platform {
+	case "windows-x86_64":
 		return fmt.Sprintf("pandoc-%s/pandoc.exe", version)
+	case "macos-arm64":
+		return fmt.Sprintf("pandoc-%s-arm64/bin/pandoc", version)
+	case "macos-x86_64":
+		return fmt.Sprintf("pandoc-%s-x86_64/bin/pandoc", version)
+	default:
+		// Linux archives use pandoc-{version}/bin/pandoc
+		return fmt.Sprintf("pandoc-%s/bin/pandoc", version)
 	}
-	return fmt.Sprintf("pandoc-%s/bin/pandoc", version)
 }
 
 func readVersionFile(path string) string {

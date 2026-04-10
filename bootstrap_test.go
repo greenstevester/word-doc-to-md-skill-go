@@ -109,7 +109,9 @@ func TestInnerPath(t *testing.T) {
 		want     string
 	}{
 		{"linux-amd64", "3.9.0.2", "pandoc-3.9.0.2/bin/pandoc"},
-		{"macos-arm64", "3.9.0.2", "pandoc-3.9.0.2/bin/pandoc"},
+		{"linux-arm64", "3.9.0.2", "pandoc-3.9.0.2/bin/pandoc"},
+		{"macos-arm64", "3.9.0.2", "pandoc-3.9.0.2-arm64/bin/pandoc"},
+		{"macos-x86_64", "3.9.0.2", "pandoc-3.9.0.2-x86_64/bin/pandoc"},
 		{"windows-x86_64", "3.9.0.2", "pandoc-3.9.0.2/pandoc.exe"},
 	}
 	for _, tt := range tests {

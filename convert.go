@@ -8,13 +8,16 @@ import (
 )
 
 func convert(input, output string, stdout bool) error {
-	if err := bootstrap(defaultPandocVersion); err != nil {
-		return fmt.Errorf("bootstrap: %w", err)
-	}
-
 	pandocPath, err := findPandoc()
 	if err != nil {
-		return err
+		// No pandoc found anywhere — bootstrap it
+		if bErr := bootstrap(defaultPandocVersion); bErr != nil {
+			return fmt.Errorf("bootstrap: %w", bErr)
+		}
+		pandocPath, err = findPandoc()
+		if err != nil {
+			return err
+		}
 	}
 
 	tmpFile, err := os.CreateTemp("", "pandoc-out-*.md")
@@ -45,6 +48,7 @@ func convert(input, output string, stdout bool) error {
 }
 
 func findPandoc() (string, error) {
+	// 1. Check the bundled bin directory first
 	dir := binDir()
 	for _, name := range []string{"pandoc", "pandoc.exe"} {
 		p := filepath.Join(dir, name)
@@ -52,5 +56,11 @@ func findPandoc() (string, error) {
 			return p, nil
 		}
 	}
-	return "", fmt.Errorf("pandoc binary not found in %s", dir)
+
+	// 2. Fall back to system PATH
+	if p, err := exec.LookPath("pandoc"); err == nil {
+		return p, nil
+	}
+
+	return "", fmt.Errorf("pandoc not found in %s or system PATH", dir)
 }
