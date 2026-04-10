@@ -65,9 +65,22 @@ func parseOutputArgs(args []string, input string) (bool, string) {
 	return stdout, output
 }
 
+// binDir returns the directory where pandoc is stored.
+// It lives next to the docx-to-md executable (i.e. inside the skill plugin dir),
+// NOT in the user's current working directory.
 func binDir() string {
-	wd, _ := os.Getwd()
-	return filepath.Join(wd, "bin")
+	exe, err := os.Executable()
+	if err != nil {
+		// Fall back to CWD if we can't resolve the executable path.
+		wd, _ := os.Getwd()
+		return filepath.Join(wd, "bin")
+	}
+	exe, err = filepath.EvalSymlinks(exe)
+	if err != nil {
+		wd, _ := os.Getwd()
+		return filepath.Join(wd, "bin")
+	}
+	return filepath.Join(filepath.Dir(exe), "bin")
 }
 
 func printUsage() {

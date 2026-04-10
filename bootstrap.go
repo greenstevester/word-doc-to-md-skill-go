@@ -24,10 +24,20 @@ func bootstrap(version string) error {
 
 	binName := pandocBinaryName(platform)
 	binPath := filepath.Join(dir, binName)
+	versionFile := filepath.Join(dir, ".pandoc-version")
 
 	if isExecutable(binPath) {
-		fmt.Fprintf(os.Stderr, "pandoc already bootstrapped at %s\n", binPath)
-		return nil
+		installed := readVersionFile(versionFile)
+		if installed == version {
+			fmt.Fprintf(os.Stderr, "pandoc %s ready at %s\n", version, binPath)
+			return nil
+		}
+		if installed != "" {
+			fmt.Fprintf(os.Stderr, "Pandoc update available: %s -> %s\n", installed, version)
+			fmt.Fprintf(os.Stderr, "  Upgrading pandoc...\n")
+		} else {
+			fmt.Fprintf(os.Stderr, "Pandoc version unknown, upgrading to %s...\n", version)
+		}
 	}
 
 	asset := assetForPlatform(platform, version)
@@ -70,7 +80,11 @@ func bootstrap(version string) error {
 		return fmt.Errorf("chmod: %w", err)
 	}
 
-	fmt.Fprintf(os.Stderr, "  Installed -> %s\nDone.\n", binPath)
+	if err := os.WriteFile(versionFile, []byte(version), 0o644); err != nil {
+		return fmt.Errorf("write version file: %w", err)
+	}
+
+	fmt.Fprintf(os.Stderr, "  Installed pandoc %s -> %s\nDone.\n", version, binPath)
 	return nil
 }
 
@@ -126,6 +140,14 @@ func innerPath(platform, version string) string {
 		return fmt.Sprintf("pandoc-%s/pandoc.exe", version)
 	}
 	return fmt.Sprintf("pandoc-%s/bin/pandoc", version)
+}
+
+func readVersionFile(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(data))
 }
 
 func isExecutable(path string) bool {
