@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -140,6 +141,9 @@ func TestIsExecutable(t *testing.T) {
 	})
 
 	t.Run("non-executable file", func(t *testing.T) {
+		if runtime.GOOS == "windows" {
+			t.Skip("Windows has no executable permission bit")
+		}
 		tmpDir := t.TempDir()
 		path := filepath.Join(tmpDir, "test-file")
 		if err := os.WriteFile(path, []byte("data"), 0o644); err != nil {
