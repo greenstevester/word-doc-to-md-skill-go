@@ -1,0 +1,102 @@
+version: 1
+
+project_name: docx-to-md
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: docx-to-md
+    main: .
+    binary: docx-to-md
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X 'main.buildTime={{.Date}}'
+    flags:
+      - -trimpath
+
+archives:
+  - id: default
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - Merge pull request
+      - Merge remote-tracking branch
+      - Merge branch
+  groups:
+    - title: "New Features"
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: "Bug Fixes"
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: "Other Changes"
+      order: 999
+
+release:
+  github:
+    owner: greenstevester
+    name: word-doc-to-md-skill-go
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    # docx-to-md {{.Tag}}
+
+    Convert Word documents to clean, agent-readable Markdown.
+
+    ## Download
+
+    **Linux:**
+    ```bash
+    # AMD64
+    curl -L -o docx-to-md.tar.gz https://github.com/greenstevester/word-doc-to-md-skill-go/releases/download/{{.Tag}}/docx-to-md_{{.Version}}_linux_amd64.tar.gz
+    tar -xzf docx-to-md.tar.gz && chmod +x docx-to-md
+
+    # ARM64
+    curl -L -o docx-to-md.tar.gz https://github.com/greenstevester/word-doc-to-md-skill-go/releases/download/{{.Tag}}/docx-to-md_{{.Version}}_linux_arm64.tar.gz
+    tar -xzf docx-to-md.tar.gz && chmod +x docx-to-md
+    ```
+
+    **macOS:**
+    ```bash
+    # Apple Silicon (M1/M2/M3/M4)
+    curl -L -o docx-to-md.tar.gz https://github.com/greenstevester/word-doc-to-md-skill-go/releases/download/{{.Tag}}/docx-to-md_{{.Version}}_darwin_arm64.tar.gz
+    tar -xzf docx-to-md.tar.gz && chmod +x docx-to-md
+
+    # Intel
+    curl -L -o docx-to-md.tar.gz https://github.com/greenstevester/word-doc-to-md-skill-go/releases/download/{{.Tag}}/docx-to-md_{{.Version}}_darwin_amd64.tar.gz
+    tar -xzf docx-to-md.tar.gz && chmod +x docx-to-md
+    ```
+
+    **Windows:**
+    ```powershell
+    # Download and extract docx-to-md_{{.Version}}_windows_amd64.zip
+    ```
