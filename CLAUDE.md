@@ -27,9 +27,9 @@ go test -run TestTransformImages # Run a single test by name
 
 Three-stage pipeline, all in package `main`:
 
-1. **bootstrap.go** — Downloads pandoc from GitHub releases on first run (version-pinned at `defaultPandocVersion` in main.go). Detects OS/arch automatically. Binary lands in `./bin/pandoc`.
-2. **convert.go** — Runs pandoc with `--track-changes=all -t gfm` to produce raw GFM markdown in a temp file, then pipes through postprocess.
-3. **postprocess.go** — Regex-based transforms applied in order: accept tracked insertions / drop deletions & comments → normalize heading hierarchy (shift to start at H1) → strip grid-table dividers & empty pipe rows → replace image refs with `[IMAGE: ...]` placeholders → collapse consecutive blank lines.
+1. **bootstrap.go** — Downloads pandoc from GitHub releases on first run (version-pinned at `defaultPandocVersion` in main.go). Detects OS/arch automatically. Binary lands in `<dir-of-executable>/bin/pandoc` (resolved via `binDir()` in `main.go`) — **not** the CWD, so it lives alongside `docx-to-md` inside the skill plugin dir. A `.pandoc-version` sentinel is written next to it; bumping `defaultPandocVersion` triggers an auto-upgrade on next run.
+2. **convert.go** — Resolves pandoc by first checking `binDir()`, then falling back to system `PATH`, then bootstrapping if neither is found. Runs pandoc with `--track-changes=all -t gfm` to produce raw GFM in a temp file, then pipes through postprocess.
+3. **postprocess.go** — Regex-based transforms applied in order: accept tracked insertions / drop deletions and `{.comment-start}` / `{.comment-end}` markers → normalize heading hierarchy (shift the shallowest heading to H1) → strip grid-table dividers & empty pipe rows → replace image refs with `[IMAGE: alt]` placeholders → collapse consecutive blank lines.
 
 `main.go` dispatches subcommands: default (full convert), `postprocess` (postprocess-only), `bootstrap` (download pandoc only). Output goes to file by default or stdout with `--stdout`.
 
