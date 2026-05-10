@@ -95,16 +95,26 @@ make ci             # Full CI pipeline locally
 
 ## Architecture
 
+This repo is the **engine** behind the [`word-doc-to-md-skill`](https://github.com/greenstevester/word-doc-to-md-skill) Claude Code plugin. The skill is a thin install + UX wrapper; all the actual conversion and post-processing logic lives here.
+
+### Why a static Go binary
+
+- **No runtime dependencies** -- no Python, Node, or Ruby to install. `CGO_ENABLED=0` and `-trimpath`, so the binary is genuinely portable across Linux distros and macOS/Windows variants.
+- **Fast cold start** -- sub-second to begin processing; warm runs are pandoc-bound, not interpreter-bound.
+- **Single artifact per platform** -- ~2.5 MB. The skill's `install.sh` picks the right one from this repo's GitHub Releases by detecting OS/arch.
+
+### Pipeline
+
 Single `main` package, three-stage pipeline:
 
-1. **bootstrap.go** -- Auto-downloads pandoc from GitHub releases, caches in `./bin/`
-2. **convert.go** -- Runs pandoc (`--track-changes=all -t gfm`), pipes output through postprocess
-3. **postprocess.go** -- Five sequential regex/line transforms to clean the markdown
+1. **bootstrap.go** -- Auto-downloads pandoc from GitHub releases, caches next to the executable (not CWD).
+2. **convert.go** -- Resolves pandoc (bundled `bin/` -> system `PATH` -> bootstrap), runs pandoc (`--track-changes=all -t gfm`), pipes output through postprocess.
+3. **postprocess.go** -- Five sequential regex/line transforms to clean the markdown.
 
 ## Related
 
-- [word-doc-to-md-skill](https://github.com/greenstevester/word-doc-to-md-skill) -- Claude Code skill plugin that uses this binary
-- [fast-cc-git-hooks](https://github.com/greenstevester/fast-cc-git-hooks) -- Build/release pattern this repo follows
+- [word-doc-to-md-skill](https://github.com/greenstevester/word-doc-to-md-skill) -- the Claude Code skill plugin that bundles and uses this binary. If you want the install + UX wrapper, that's the place. This repo is what gets built and downloaded on first use.
+- [fast-cc-git-hooks](https://github.com/greenstevester/fast-cc-git-hooks) -- Build/release pattern this repo follows.
 
 ## License
 
